@@ -112,6 +112,7 @@ struct ShelfView: View {
     @State private var selectedID: UUID? = nil
     @State private var expandedItem: UUID? = nil
     @State private var expandedSelection: Int? = nil
+    @State private var lastItemCount: Int = 0
 
     private var sortedItems: [ClipItem] {
         store.items.sorted { a, b in
@@ -162,6 +163,15 @@ struct ShelfView: View {
                             proxy.scrollTo(id, anchor: .center)
                         }
                     }
+                }
+                .onChange(of: store.items.count) {
+                    if store.items.count > lastItemCount {
+                        resetToStart(proxy: proxy)
+                    }
+                    lastItemCount = store.items.count
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .resetShelfScroll)) { _ in
+                    resetToStart(proxy: proxy)
                 }
             }
         }
@@ -220,6 +230,16 @@ struct ShelfView: View {
                 .onTapGesture {
                     expandedSelection = 1
                 }
+            }
+        }
+    }
+
+    private func resetToStart(proxy: ScrollViewProxy) {
+        collapseExpansion()
+        selectedID = nil
+        if let first = sortedItems.first {
+            withAnimation(.easeOut(duration: 0.15)) {
+                proxy.scrollTo(first.id, anchor: .leading)
             }
         }
     }

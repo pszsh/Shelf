@@ -118,4 +118,5 @@ class ClipStore: ObservableObject {
 
 extension Notification.Name {
     static let dismissShelfPanel = Notification.Name("dismissShelfPanel")
+    static let resetShelfScroll = Notification.Name("resetShelfScroll")
 }

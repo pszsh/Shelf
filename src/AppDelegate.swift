@@ -10,6 +10,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var monitor: PasteboardMonitor!
     private var clickMonitor: Any?
     private var hotkeyRef: EventHotKeyRef?
+    private var lastHideTime: Date?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         store = ClipStore()
@@ -30,7 +31,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             forName: .dismissShelfPanel, object: nil, queue: .main
         ) { [weak self] _ in
             self?.hidePanel()
-            self?.monitor.syncChangeCount()
         }
     }
 
@@ -75,6 +75,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showPanel() {
+        if let t = lastHideTime, Date().timeIntervalSince(t) > 10 {
+            NotificationCenter.default.post(name: .resetShelfScroll, object: nil)
+        }
         panel.showAtBottom()
 
         clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) {
@@ -88,6 +91,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func hidePanel() {
+        lastHideTime = Date()
         ShelfPreviewController.shared.dismiss()
         panel.cancelOperation(nil)
         if let m = clickMonitor {
