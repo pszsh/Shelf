@@ -20,6 +20,7 @@ pub struct ShelfClip {
     pub is_pinned: bool,
     pub displaced_prev: i32,
     pub displaced_next: i32,
+    pub source_path: *mut c_char,
 }
 
 #[repr(C)]
@@ -78,6 +79,7 @@ pub extern "C" fn shelf_store_get_all(store: *mut Store) -> ShelfClipList {
             is_pinned: c.is_pinned,
             displaced_prev: c.displaced_prev.map(|v| v as i32).unwrap_or(-1),
             displaced_next: c.displaced_next.map(|v| v as i32).unwrap_or(-1),
+            source_path: opt_to_c(&c.source_path),
         })
         .collect();
 
@@ -108,6 +110,9 @@ pub extern "C" fn shelf_clip_list_free(list: ShelfClipList) {
             if !clip.source_app.is_null() {
                 drop(CString::from_raw(clip.source_app));
             }
+            if !clip.source_path.is_null() {
+                drop(CString::from_raw(clip.source_path));
+            }
         }
     }
 }
@@ -132,6 +137,7 @@ pub extern "C" fn shelf_store_add(
         is_pinned: ffi.is_pinned,
         displaced_prev: if ffi.displaced_prev >= 0 { Some(ffi.displaced_prev as i64) } else { None },
         displaced_next: if ffi.displaced_next >= 0 { Some(ffi.displaced_next as i64) } else { None },
+        source_path: unsafe { from_c(ffi.source_path) },
     };
 
     let img = if !image_data.is_null() && image_len > 0 {

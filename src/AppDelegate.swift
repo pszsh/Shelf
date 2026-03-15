@@ -11,6 +11,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var clickMonitor: Any?
     private var hotkeyRef: EventHotKeyRef?
     private var lastHideTime: Date?
+    private var settingsWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         store = ClipStore()
@@ -48,6 +49,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Show Shelf", action: #selector(togglePanel), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: "Settings...", action: #selector(openSettings), keyEquivalent: ","))
         menu.addItem(NSMenuItem(title: "Clear All", action: #selector(clearAll), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit Shelf", action: #selector(quit), keyEquivalent: "q"))
@@ -98,6 +100,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             NSEvent.removeMonitor(m)
             clickMonitor = nil
         }
+    }
+
+    @objc private func openSettings() {
+        if let w = settingsWindow, w.isVisible {
+            w.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 300, height: 240),
+            styleMask: [.titled, .closable],
+            backing: .buffered, defer: false
+        )
+        window.title = "Shelf Settings"
+        window.contentView = NSHostingView(rootView: SettingsView())
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        settingsWindow = window
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     @objc private func clearAll() {

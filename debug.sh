@@ -38,7 +38,7 @@ swiftc \
 
 cp resources/Info.plist "$CONTENTS/"
 
-codesign --force --sign - "$APP_BUNDLE"
+codesign --force --sign "${MACOS_SIGNING_IDENTITY:--}" "$APP_BUNDLE"
 
 echo "Built: $APP_BUNDLE"
 open "$APP_BUNDLE"

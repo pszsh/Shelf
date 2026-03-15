@@ -37,7 +37,8 @@ class ClipStore: ObservableObject {
                 sourceApp: c.source_app != nil ? String(cString: c.source_app) : nil,
                 isPinned: c.is_pinned,
                 displacedPrev: c.displaced_prev >= 0 ? Int(c.displaced_prev) : nil,
-                displacedNext: c.displaced_next >= 0 ? Int(c.displaced_next) : nil
+                displacedNext: c.displaced_next >= 0 ? Int(c.displaced_next) : nil,
+                sourceFilePath: c.source_path != nil ? String(cString: c.source_path) : nil
             ))
         }
         items = loaded
@@ -47,10 +48,12 @@ class ClipStore: ObservableObject {
         let idStr = strdup(item.id.uuidString)
         let textStr = item.textContent.flatMap { strdup($0) }
         let appStr = item.sourceApp.flatMap { strdup($0) }
+        let srcStr = item.sourceFilePath.flatMap { strdup($0) }
         defer {
             free(idStr)
             free(textStr)
             free(appStr)
+            free(srcStr)
         }
 
         var clip = ShelfClip(
@@ -62,7 +65,8 @@ class ClipStore: ObservableObject {
             source_app: appStr,
             is_pinned: item.isPinned,
             displaced_prev: -1,
-            displaced_next: -1
+            displaced_next: -1,
+            source_path: srcStr
         )
 
         if let data = item.rawImageData {
@@ -95,19 +99,51 @@ class ClipStore: ObservableObject {
         let pb = NSPasteboard.general
         pb.clearContents()
 
-        switch item.contentType {
-        case .text:
-            pb.setString(item.textContent ?? "", forType: .string)
-        case .url:
-            pb.setString(item.textContent ?? "", forType: .string)
-            pb.setString(item.textContent ?? "", forType: .URL)
-        case .image:
-            if let image = item.loadImage() {
-                pb.writeObjects([image])
+        if let path = item.sourceFilePath,
+           FileManager.default.fileExists(atPath: path) {
+            pb.writeObjects([NSURL(fileURLWithPath: path)])
+        } else {
+            switch item.contentType {
+            case .text:
+                pb.setString(item.textContent ?? "", forType: .string)
+            case .url:
+                pb.setString(item.textContent ?? "", forType: .string)
+                pb.setString(item.textContent ?? "", forType: .URL)
+            case .image:
+                if let image = item.loadImage() {
+                    pb.writeObjects([image])
+                }
             }
         }
 
         NotificationCenter.default.post(name: .dismissShelfPanel, object: nil)
+    }
+
+    func copyTextToClipboard(_ item: ClipItem) {
+        let pb = NSPasteboard.general
+        pb.clearContents()
+        pb.setString(item.textContent ?? "", forType: .string)
+        NotificationCenter.default.post(name: .dismissShelfPanel, object: nil)
+    }
+
+    func copyPathToClipboard(_ item: ClipItem) {
+        guard let path = item.sourceFilePath else { return }
+        let pb = NSPasteboard.general
+        pb.clearContents()
+        pb.setString(path, forType: .string)
+        NotificationCenter.default.post(name: .dismissShelfPanel, object: nil)
+    }
+
+    func editItem(_ item: ClipItem) {
+        if let path = item.sourceFilePath,
+           FileManager.default.fileExists(atPath: path) {
+            NSWorkspace.shared.open(URL(fileURLWithPath: path))
+        } else if let text = item.textContent {
+            let url = FileManager.default.temporaryDirectory
+                .appendingPathComponent("shelf-\(item.id.uuidString.prefix(8)).txt")
+            try? text.write(to: url, atomically: true, encoding: .utf8)
+            NSWorkspace.shared.open(url)
+        }
     }
 
     func clearAll() {

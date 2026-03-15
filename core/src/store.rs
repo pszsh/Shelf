@@ -35,6 +35,7 @@ impl Store {
 
         conn.execute("ALTER TABLE clips ADD COLUMN displaced_prev INTEGER", []).ok();
         conn.execute("ALTER TABLE clips ADD COLUMN displaced_next INTEGER", []).ok();
+        conn.execute("ALTER TABLE clips ADD COLUMN source_path TEXT", []).ok();
 
         Store {
             conn,
@@ -48,7 +49,7 @@ impl Store {
             .conn
             .prepare(
                 "SELECT id, timestamp, content_type, text_content, image_path, source_app, is_pinned,
-                        displaced_prev, displaced_next
+                        displaced_prev, displaced_next, source_path
                  FROM clips ORDER BY is_pinned DESC, timestamp DESC",
             )
             .unwrap();
@@ -103,8 +104,8 @@ impl Store {
         self.conn
             .execute(
                 "INSERT OR REPLACE INTO clips
-                 (id, timestamp, content_type, text_content, image_path, source_app, is_pinned)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                 (id, timestamp, content_type, text_content, image_path, source_app, is_pinned, source_path)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
                 rusqlite::params![
                     clip.id,
                     clip.timestamp,
@@ -113,6 +114,7 @@ impl Store {
                     image_path,
                     clip.source_app,
                     clip.is_pinned as i32,
+                    clip.source_path,
                 ],
             )
             .ok();

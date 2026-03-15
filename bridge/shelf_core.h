@@ -17,6 +17,7 @@ typedef struct {
     bool is_pinned;
     int32_t displaced_prev;
     int32_t displaced_next;
+    char *source_path;
 } ShelfClip;
 
 typedef struct {

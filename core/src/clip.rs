@@ -11,6 +11,7 @@ pub struct Clip {
     pub is_pinned: bool,
     pub displaced_prev: Option<i64>,
     pub displaced_next: Option<i64>,
+    pub source_path: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -60,6 +61,7 @@ impl Clip {
             is_pinned: row.get::<_, i32>(6)? != 0,
             displaced_prev: row.get(7)?,
             displaced_next: row.get(8)?,
+            source_path: row.get(9)?,
         })
     }
 }

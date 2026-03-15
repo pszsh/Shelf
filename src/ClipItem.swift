@@ -22,6 +22,7 @@ struct ClipItem: Identifiable {
     var rawImageData: Data?
     var displacedPrev: Int?
     var displacedNext: Int?
+    var sourceFilePath: String?
 
     var preview: String {
         switch contentType {
@@ -32,14 +33,6 @@ struct ClipItem: Identifiable {
         case .image:
             return "Image"
         }
-    }
-
-    var relativeTime: String {
-        let interval = Date().timeIntervalSince(timestamp)
-        if interval < 60 { return "now" }
-        if interval < 3600 { return "\(Int(interval / 60))m" }
-        if interval < 86400 { return "\(Int(interval / 3600))h" }
-        return "\(Int(interval / 86400))d"
     }
 
     var sourceAppName: String? {
@@ -59,13 +52,41 @@ struct ClipItem: Identifiable {
         }
     }
 
+    private static let thumbCache = NSCache<NSString, NSImage>()
+
     func loadImage() -> NSImage? {
-        guard let path = imagePath else {
-            if let data = rawImageData {
-                return NSImage(data: data)
-            }
+        let key = id.uuidString as NSString
+        if let cached = Self.thumbCache.object(forKey: key) {
+            return cached
+        }
+
+        let source: NSImage?
+        if let path = imagePath {
+            source = NSImage(contentsOfFile: path)
+        } else if let data = rawImageData {
+            source = NSImage(data: data)
+        } else {
             return nil
         }
-        return NSImage(contentsOfFile: path)
+
+        guard let img = source else { return nil }
+
+        let maxDim: CGFloat = 400
+        let w = img.size.width, h = img.size.height
+        if w > maxDim || h > maxDim {
+            let scale = min(maxDim / w, maxDim / h)
+            let newSize = NSSize(width: w * scale, height: h * scale)
+            let thumb = NSImage(size: newSize)
+            thumb.lockFocus()
+            img.draw(in: NSRect(origin: .zero, size: newSize),
+                     from: NSRect(origin: .zero, size: img.size),
+                     operation: .copy, fraction: 1.0)
+            thumb.unlockFocus()
+            Self.thumbCache.setObject(thumb, forKey: key)
+            return thumb
+        }
+
+        Self.thumbCache.setObject(img, forKey: key)
+        return img
     }
 }
