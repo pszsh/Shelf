@@ -1,18 +1,22 @@
 # Shelf
 
-A clipboard manager for macOS. Sits in your menu bar, watches what you copy, shows it
-all in a floating shelf at the bottom of your screen. Hit `Cmd+Shift+V` or click the
+A clipboard manager for macOS. Hit `Cmd+Shift+V` or click the
 tray icon.
 
-You know Paste? It's that, but yours. No subscription, no account, no telemetry.
-Rust backend, Swift frontend, zero dependencies beyond what ships with your Mac.
+I just didn't feel like this was a thing that should cost money.
+Now it doesn't anymore.
+
+
+## Preview
+
+<img width="800" height="160" alt="image" src="https://github.com/user-attachments/assets/ba8fddb1-519b-49a6-97e7-111b55abe227" />
 
 ## What it does
 
 - Monitors your clipboard — text, URLs, images
 - Cards show a preview, a title (file path with the filename bolded), and a timestamp
 - Re-copying something moves it to the front instead of duplicating it
-- Tracks where items were displaced from, so you can peek at old neighbors
+- Tracks where items were displaced from, so you can peek at old neighbors (click twice - not exactly double click, just... twice.)
 - Space bar opens native Quick Look on the selected card
 - Arrow keys to navigate, Return to paste, Delete to remove
 - Starts on login automatically
@@ -53,4 +57,6 @@ resources/  Icon SVG, Info.plist
 
 ## Author
 
-[pszsh](https://else-if.org)
+[pszsh](https://else-if.org) - My Half-Assed blog.
+Email: [jess@else-if.org](mailto:jess@else-if.org)
+
