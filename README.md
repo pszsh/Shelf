@@ -9,7 +9,7 @@ Now it doesn't anymore.
 
 ## Preview
 
-<img width="800" height="160" alt="image" src="https://github.com/user-attachments/assets/ba8fddb1-519b-49a6-97e7-111b55abe227" />
+<img width="1934" height="386" alt="B39A5D5D-60D0-4B77-AA18-BACEC7DA2C42" src="https://github.com/user-attachments/assets/5031fe8d-3b71-4577-8714-4fde2e16fc59" />
 
 ## What it does
 
