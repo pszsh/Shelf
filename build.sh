@@ -7,6 +7,37 @@ APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 CONTENTS="$APP_BUNDLE/Contents"
 ICON_SVG="resources/shelf.svg"
 
+find_sdk() {
+    local tmp="/tmp/shelf_sdk_check_$$.swift"
+    printf 'let _=0\n' > "$tmp"
+
+    local default_sdk
+    default_sdk="$(xcrun --show-sdk-path 2>/dev/null)"
+
+    if swiftc -sdk "$default_sdk" -typecheck "$tmp" 2>/dev/null; then
+        rm -f "$tmp"
+        echo "$default_sdk"
+        return
+    fi
+
+    local sdk_dir
+    sdk_dir="$(dirname "$default_sdk")"
+
+    for sdk in $(ls -rd "$sdk_dir"/MacOSX[0-9]*.sdk 2>/dev/null); do
+        if swiftc -sdk "$sdk" -typecheck "$tmp" 2>/dev/null; then
+            rm -f "$tmp"
+            echo "$sdk"
+            return
+        fi
+    done
+
+    rm -f "$tmp"
+    echo "Error: no macOS SDK compatible with installed Swift compiler" >&2
+    exit 1
+}
+
+MACOS_SDK="$(find_sdk)"
+
 rm -rf "$APP_BUNDLE"
 mkdir -p "$CONTENTS/MacOS" "$CONTENTS/Resources"
 
@@ -19,7 +50,7 @@ core/target/release/shelf-icon "$ICON_SVG" "$CONTENTS/Resources/AppIcon.icns" --
 # Build Swift
 swiftc \
     -target arm64-apple-macosx14.0 \
-    -sdk "$(xcrun --show-sdk-path)" \
+    -sdk "$MACOS_SDK" \
     -import-objc-header bridge/shelf_core.h \
     -L core/target/release \
     -lshelf_core \
